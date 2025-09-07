@@ -30,7 +30,36 @@ const SnacksPage = ({ user, isMobile }) => {
   };
 
   const SnackCreatorModal = () => {
+    const [isScanning, setIsScanning] = useState(false);
+    const [scannedProduct, setScannedProduct] = useState(null);
+    
     if (!showSnackCreator) return null;
+
+    const handleBarcodeCapture = async (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        setIsScanning(true);
+        
+        // Simulate barcode scanning API call
+        setTimeout(() => {
+          // Mock product data - in real app, this would come from a barcode API
+          const mockProduct = {
+            name: 'Granola Bar',
+            category: 'Crunchy',
+            brand: 'Nature Valley'
+          };
+          setScannedProduct(mockProduct);
+          setIsScanning(false);
+          
+          // Auto-fill form fields
+          const form = event.target.closest('form');
+          if (form) {
+            form.name.value = mockProduct.name;
+            form.category.value = mockProduct.category;
+          }
+        }, 2000);
+      }
+    };
 
     const handleSubmit = (e) => {
       e.preventDefault();
@@ -43,6 +72,8 @@ const SnacksPage = ({ user, isMobile }) => {
       };
       addNewSnack(newSnack);
       setShowSnackCreator(false);
+      setScannedProduct(null);
+      setIsScanning(false);
     };
 
     return (
@@ -51,7 +82,11 @@ const SnacksPage = ({ user, isMobile }) => {
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-gray-900">Add New Snack</h3>
             <button 
-              onClick={() => setShowSnackCreator(false)}
+              onClick={() => {
+                setShowSnackCreator(false);
+                setScannedProduct(null);
+                setIsScanning(false);
+              }}
               className="text-gray-400 hover:text-gray-600 text-2xl"
             >
               ×
@@ -59,6 +94,50 @@ const SnacksPage = ({ user, isMobile }) => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Barcode Scanner Section */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Quick Add with Barcode</label>
+              <label className={`flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
+                scannedProduct 
+                  ? 'border-green-400 bg-green-50' 
+                  : isScanning 
+                    ? 'border-orange-400 bg-orange-50'
+                    : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+              }`}>
+                <div className="flex flex-col items-center justify-center py-2">
+                  {isScanning ? (
+                    <>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500 mb-2"></div>
+                      <p className="text-sm text-orange-600 font-medium">Scanning barcode...</p>
+                    </>
+                  ) : scannedProduct ? (
+                    <>
+                      <div className="text-xl mb-1">✅</div>
+                      <p className="text-sm text-green-600 font-medium">{scannedProduct.name}</p>
+                      <p className="text-xs text-gray-500">{scannedProduct.brand}</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-xl mb-1">📱</div>
+                      <p className="text-sm text-gray-500">
+                        <span className="font-semibold">Scan Barcode</span>
+                      </p>
+                      <p className="text-xs text-gray-400">Camera will auto-detect barcode</p>
+                    </>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleBarcodeCapture}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            <div className="text-center text-sm text-gray-500">or add manually</div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Snack Name *</label>
               <input
@@ -124,7 +203,11 @@ const SnacksPage = ({ user, isMobile }) => {
             <div className="flex space-x-3 mt-6">
               <button
                 type="button"
-                onClick={() => setShowSnackCreator(false)}
+                onClick={() => {
+                  setShowSnackCreator(false);
+                  setScannedProduct(null);
+                  setIsScanning(false);
+                }}
                 className="flex-1 py-3 px-4 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
               >
                 Cancel
