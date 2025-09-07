@@ -220,10 +220,10 @@ const MealPlannerPage = ({
       {/* Snacks Section */}
       <div className={`bg-white rounded-xl p-6 shadow-sm border border-gray-100 ${isMobile ? 'rounded-2xl p-5' : ''}`}>
         <h3 className={`font-semibold text-gray-800 mb-4 ${isMobile ? 'text-lg' : ''}`}>Snacks</h3>
-        <div className={`${isMobile ? 'space-y-3' : 'grid md:grid-cols-2 gap-4'}`}>
+        <div className={`${isMobile ? 'flex flex-col items-center space-y-4' : 'grid md:grid-cols-2 gap-4'}`}>
           <button 
             onClick={() => openMealPlanner(selectedDay, 'morning-snack')}
-            className={`border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-orange-400 hover:bg-orange-50 transition-colors ${isMobile ? 'rounded-xl p-5' : ''}`}
+            className={`border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-orange-400 hover:bg-orange-50 transition-colors ${isMobile ? 'rounded-xl p-6 w-full max-w-xs' : ''}`}
           >
             <div className="text-gray-400 mb-2">
               <span className="text-lg">+</span>
@@ -232,7 +232,7 @@ const MealPlannerPage = ({
           </button>
           <button 
             onClick={() => openMealPlanner(selectedDay, 'afternoon-snack')}
-            className={`border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-orange-400 hover:bg-orange-50 transition-colors ${isMobile ? 'rounded-xl p-5' : ''}`}
+            className={`border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-orange-400 hover:bg-orange-50 transition-colors ${isMobile ? 'rounded-xl p-6 w-full max-w-xs' : ''}`}
           >
             <div className="text-gray-400 mb-2">
               <span className="text-lg">+</span>
