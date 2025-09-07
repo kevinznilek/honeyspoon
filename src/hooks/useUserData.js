@@ -7,7 +7,6 @@ import {
   updateShoppingItem,
   getFamilies,
   createFamily,
-  createFamilyMember,
   getMealPlans,
   getProfile,
   createProfile
@@ -111,23 +110,11 @@ export const useUserData = (user) => {
           setProfile(userProfile);
         }
 
-        // If new user with no data, create default family
+        // If new user with no data, create empty default family
         if (userFamilies.length === 0) {
-          const defaultFamily = await createFamily(user.id, "My Family");
+          await createFamily(user.id, "My Family");
           
-          // Create default family members
-          const defaultMembers = [
-            { name: "Mom", restrictions: ["dairy-free"] },
-            { name: "Dad", restrictions: [] },
-            { name: "Child 1", restrictions: ["no spicy"] },
-            { name: "Child 2", restrictions: ["nut allergy"] }
-          ];
-
-          for (const member of defaultMembers) {
-            await createFamilyMember(defaultFamily.id, member);
-          }
-
-          // Reload families
+          // Reload families (empty family for now)
           const updatedFamilies = await getFamilies(user.id);
           setFamilies(updatedFamilies);
         }
