@@ -679,13 +679,13 @@ const MealPlanningApp = () => {
                 <div className="flex space-x-3">
                   <button 
                     onClick={() => setShowFilters(!showFilters)}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${isMobile ? 'py-3 rounded-xl touch-manipulation' : ''} ${showFilters ? 'bg-purple-100 text-purple-700' : ''}`} 
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${isMobile ? 'py-3 rounded-xl touch-manipulation' : ''} ${showFilters ? 'bg-gray-100 text-gray-700' : ''}`} 
                     style={showFilters ? {} : {backgroundColor: '#F3F4F6', color: '#6B7280'}}
                   >
                     <Filter size={16} />
                     <span>Filters</span>
                     {(selectedFamilyFilter !== 'all' || selectedTagFilters.length > 0 || selectedInstagramFilter !== 'all') && (
-                      <span className="bg-purple-600 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center">
+                      <span className="bg-gray-600 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center">
                         {(selectedFamilyFilter !== 'all' ? 1 : 0) + selectedTagFilters.length + (selectedInstagramFilter !== 'all' ? 1 : 0)}
                       </span>
                     )}
@@ -848,10 +848,10 @@ const MealPlanningApp = () => {
                           </span>
                           <div className="flex flex-wrap gap-1">
                             {selectedFamilyFilter !== 'all' && (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-lg text-xs">
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs">
                                 <Heart size={10} fill="currentColor" />
                                 {selectedFamilyFilter} Faves
-                                <button onClick={() => {setSelectedFamilyFilter('all'); setCurrentPage(1);}} className="hover:text-purple-900">
+                                <button onClick={() => {setSelectedFamilyFilter('all'); setCurrentPage(1);}} className="hover:text-gray-900">
                                   <X size={10} />
                                 </button>
                               </span>
@@ -933,9 +933,9 @@ const MealPlanningApp = () => {
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <BookOpen size={24} className="text-purple-600" />
+                    <BookOpen size={24} className="text-gray-600" />
                     <h3 className="text-xl font-bold text-gray-900">Community Recipe Library</h3>
-                    <span className="bg-purple-100 text-purple-600 px-2 py-1 rounded-full text-xs font-medium">
+                    <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-medium">
                       {sharedRecipes.length} recipes
                     </span>
                   </div>
@@ -945,7 +945,7 @@ const MealPlanningApp = () => {
                       <select 
                         value={librarySortBy}
                         onChange={(e) => setLibrarySortBy(e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                       >
                         <option value="imports">Most Imported</option>
                         <option value="recent">Recently Added</option>
@@ -955,7 +955,7 @@ const MealPlanningApp = () => {
                     
                     <button 
                       onClick={() => setLibraryExpanded(!libraryExpanded)}
-                      className="flex items-center space-x-2 px-3 py-2 bg-purple-50 text-purple-600 rounded-lg text-sm font-medium hover:bg-purple-100 transition-colors"
+                      className="flex items-center space-x-2 px-3 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
                     >
                       {libraryExpanded ? (
                         <>
@@ -1313,7 +1313,7 @@ const MealPlanningApp = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Day</label>
-                <select className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                <select className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500">
                   {Object.keys(mealPlan).map(day => (
                     <option key={day} value={day}>{day}</option>
                   ))}
@@ -1371,7 +1371,7 @@ const MealPlanningApp = () => {
                   onClick={() => setSelectedProfile(member)}
                   className="bg-gray-50 rounded-2xl p-6 hover:bg-gray-100 transition-colors text-left"
                 >
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center mb-4 mx-auto">
+                  <div className="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center mb-4 mx-auto">
                     <User size={24} className="text-white" />
                   </div>
                   <h4 className="font-semibold text-gray-900 text-center mb-2">{member.name}</h4>
@@ -1423,7 +1423,7 @@ const MealPlanningApp = () => {
             {/* Profile Picture Section */}
             <div className="mb-8 text-center">
               <div className="relative inline-block">
-                <div className="w-24 h-24 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center mb-4">
+                <div className="w-24 h-24 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center mb-4">
                   <User size={32} className="text-white" />
                 </div>
                 <button className="absolute -bottom-2 -right-2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center border-2 border-gray-200 hover:bg-gray-50 transition-colors">
@@ -1467,7 +1467,7 @@ const MealPlanningApp = () => {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-lg font-semibold text-gray-900">Dietary Restrictions & Allergies</h4>
-                <button className="px-3 py-2 bg-purple-50 text-purple-600 rounded-lg text-sm font-medium hover:bg-purple-100 transition-colors">
+                <button className="px-3 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors">
                   <Plus size={16} className="inline mr-1" />
                   Add
                 </button>
@@ -1616,7 +1616,7 @@ const MealPlanningApp = () => {
                   <input
                     type="text"
                     name="item"
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                     placeholder="Enter item name..."
                     required
                   />
@@ -1626,7 +1626,7 @@ const MealPlanningApp = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
                   <select 
                     name="category"
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                   >
                     <option value="Produce">Produce</option>
                     <option value="Meat">Meat</option>
@@ -1684,10 +1684,10 @@ const MealPlanningApp = () => {
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={() => setParseMode(true)}
-                      className="p-4 border-2 border-dashed border-purple-300 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-colors text-center"
+                      className="p-4 border-2 border-dashed border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-colors text-center"
                     >
                       <div className="text-2xl mb-2">📱</div>
-                      <div className="font-semibold text-purple-700">Parse from Instagram</div>
+                      <div className="font-semibold text-gray-700">Parse from Instagram</div>
                       <div className="text-sm text-gray-600">Paste recipe text to auto-fill</div>
                     </button>
                     <button
@@ -1732,7 +1732,7 @@ const MealPlanningApp = () => {
                         type="text"
                         name="name"
                         defaultValue={parsedRecipe?.name || ''}
-                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                         placeholder="Enter recipe name..."
                         required
                       />
@@ -1745,7 +1745,7 @@ const MealPlanningApp = () => {
                           type="text"
                           name="time"
                           defaultValue={parsedRecipe?.time || ''}
-                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                           placeholder="e.g. 30 min"
                           required
                         />
@@ -1756,7 +1756,7 @@ const MealPlanningApp = () => {
                         <select 
                           name="difficulty"
                           defaultValue={parsedRecipe?.difficulty || 'Easy'}
-                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                           required
                         >
                           <option value="Easy">Easy</option>
@@ -1772,7 +1772,7 @@ const MealPlanningApp = () => {
                         type="text"
                         name="emoji"
                         defaultValue={parsedRecipe?.image || ''}
-                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                         placeholder="🍽️"
                         maxLength="2"
                       />
@@ -1784,7 +1784,7 @@ const MealPlanningApp = () => {
                         type="text"
                         name="tags"
                         defaultValue={parsedRecipe?.tags?.join(', ') || ''}
-                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                         placeholder="healthy, quick, vegetarian (separate with commas)"
                       />
                       <p className="text-xs text-gray-500 mt-1">Add family favorites like "Mom Fave", "Miles Fave", etc.</p>
@@ -1803,7 +1803,7 @@ const MealPlanningApp = () => {
                             type="text"
                             name="instagramHandle"
                             defaultValue={parsedRecipe?.instagramHandle || ''}
-                            className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                            className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                             placeholder="@username"
                           />
                         </div>
@@ -1813,7 +1813,7 @@ const MealPlanningApp = () => {
                           <input
                             type="url"
                             name="instagramUrl"
-                            className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                            className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                             placeholder="https://instagram.com/p/..."
                           />
                         </div>
@@ -1858,7 +1858,7 @@ const MealPlanningApp = () => {
                   <textarea
                     id="recipe-text"
                     rows="8"
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                     placeholder={`Paste your Instagram recipe here, for example:
 
 Easy 30-minute chicken tacos! 🌮
@@ -1952,7 +1952,7 @@ Sauté chicken with cumin, add peppers, serve in tortillas!
                   <div className="grid grid-cols-2 gap-3">
                     <label 
                       className={`flex items-center p-3 border rounded-xl cursor-pointer hover:bg-gray-50 ${
-                        contentType === 'blog' ? 'border-purple-500 bg-purple-50' : ''
+                        contentType === 'blog' ? 'border-gray-500 bg-gray-50' : ''
                       }`}
                     >
                       <input 
@@ -1970,7 +1970,7 @@ Sauté chicken with cumin, add peppers, serve in tortillas!
                     </label>
                     <label 
                       className={`flex items-center p-3 border rounded-xl cursor-pointer hover:bg-gray-50 ${
-                        contentType === 'video' ? 'border-purple-500 bg-purple-50' : ''
+                        contentType === 'video' ? 'border-gray-500 bg-gray-50' : ''
                       }`}
                     >
                       <input 
@@ -1994,7 +1994,7 @@ Sauté chicken with cumin, add peppers, serve in tortillas!
                   <input
                     type="text"
                     name="title"
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                     placeholder="Enter content title..."
                     required
                   />
@@ -2008,7 +2008,7 @@ Sauté chicken with cumin, add peppers, serve in tortillas!
                       <textarea
                         name="excerpt"
                         rows="3"
-                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                         placeholder="Brief description of your blog post..."
                       />
                     </div>
@@ -2017,7 +2017,7 @@ Sauté chicken with cumin, add peppers, serve in tortillas!
                       <input
                         type="text"
                         name="readTime"
-                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                         placeholder="e.g. 5 min read"
                       />
                     </div>
@@ -2031,7 +2031,7 @@ Sauté chicken with cumin, add peppers, serve in tortillas!
                     <input
                       type="text"
                       name="duration"
-                      className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                       placeholder="e.g. 12:34"
                     />
                   </div>
@@ -2042,7 +2042,7 @@ Sauté chicken with cumin, add peppers, serve in tortillas!
                   <input
                     type="text"
                     name="tags"
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                     placeholder="meal planning, nutrition, kids (separate with commas)"
                   />
                 </div>
@@ -2107,7 +2107,7 @@ Sauté chicken with cumin, add peppers, serve in tortillas!
                   <input
                     type="text"
                     name="name"
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                     placeholder="Enter snack name..."
                     required
                   />
@@ -2119,7 +2119,7 @@ Sauté chicken with cumin, add peppers, serve in tortillas!
                     <input
                       type="text"
                       name="emoji"
-                      className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                       placeholder="🍎"
                       maxLength="2"
                     />
@@ -2129,7 +2129,7 @@ Sauté chicken with cumin, add peppers, serve in tortillas!
                     <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
                     <select 
                       name="category"
-                      className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                       required
                     >
                       <option value="">Select category</option>
@@ -2148,7 +2148,7 @@ Sauté chicken with cumin, add peppers, serve in tortillas!
                   <label className="block text-sm font-medium text-gray-700 mb-2">Family Favorite</label>
                   <select 
                     name="favorite"
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                   >
                     <option value="none">No favorite</option>
                     <option value="Mom Fave">Mom Fave</option>
@@ -2162,7 +2162,7 @@ Sauté chicken with cumin, add peppers, serve in tortillas!
                   <label className="block text-sm font-medium text-gray-700 mb-2">Store *</label>
                   <select 
                     name="store"
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                     required
                   >
                     <option value="">Where to buy</option>
