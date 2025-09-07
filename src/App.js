@@ -17,12 +17,12 @@ const Navigation = ({ user, isMobile, setShowFamilyProfiles }) => {
   const location = useLocation();
   
   const tabs = [
-    { id: 'planner', label: 'Meal Planner', icon: Calendar, path: '/' },
-    { id: 'recipes', label: 'Recipes', icon: ChefHat, path: '/recipes' },
-    { id: 'snacks', label: 'Favorite Snacks', icon: Cookie, path: '/snacks' },
-    { id: 'shopping', label: 'Shopping List', icon: ShoppingCart, path: '/shopping' },
-    { id: 'pantry', label: 'Smart Pantry', icon: Camera, path: '/pantry' },
-    { id: 'content', label: 'Content', icon: Video, path: '/content' }
+    { id: 'planner', label: 'Meal Planner', mobileLabel: 'Planning', icon: Calendar, path: '/' },
+    { id: 'recipes', label: 'Recipes', mobileLabel: 'Recipes', icon: ChefHat, path: '/recipes' },
+    { id: 'snacks', label: 'Favorite Snacks', mobileLabel: 'Snacks', icon: Cookie, path: '/snacks' },
+    { id: 'shopping', label: 'Shopping List', mobileLabel: 'Shopping', icon: ShoppingCart, path: '/shopping' },
+    { id: 'pantry', label: 'Smart Pantry', mobileLabel: 'Smart', icon: Camera, path: '/pantry' },
+    { id: 'content', label: 'Content', mobileLabel: 'Content', icon: Video, path: '/content' }
   ];
 
   const TabButton = ({ path, label, icon: Icon, isActive }) => (
@@ -80,7 +80,7 @@ const Navigation = ({ user, isMobile, setShowFamilyProfiles }) => {
                 style={location.pathname === tab.path ? {backgroundColor: '#F79101'} : {}}
               >
                 <tab.icon size={20} className="mb-1" />
-                <span className="text-xs font-medium leading-tight text-center">{tab.label.split(' ')[0]}</span>
+                <span className="text-xs font-medium leading-tight text-center">{tab.mobileLabel}</span>
               </Link>
             ))}
           </div>
