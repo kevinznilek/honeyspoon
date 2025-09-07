@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, ShoppingCart, Camera, Video, Cookie, Users, Plus, CheckCircle, Clock, ChefHat, ArrowLeft, Menu, Share2, Heart, User, Edit, Upload, BookOpen, Download, TrendingUp, ChevronDown, ChevronUp, Filter, X } from 'lucide-react';
+import { supabase } from './lib/supabase';
+import Auth from './components/Auth';
+import { useUserData } from './hooks/useUserData';
 
 const MealPlanningApp = () => {
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('planner');
   const [selectedDay, setSelectedDay] = useState('Monday');
   const [isMobile, setIsMobile] = useState(false);
@@ -82,30 +87,21 @@ const MealPlanningApp = () => {
       tags: ["kids", "nutrition"]
     }
   ]);
-  const [mealPlan, setMealPlan] = useState({
-    Monday: { breakfast: null, lunch: null, dinner: null },
-    Tuesday: { breakfast: null, lunch: null, dinner: null },
-    Wednesday: { breakfast: null, lunch: null, dinner: null },
-    Thursday: { breakfast: null, lunch: null, dinner: null },
-    Friday: { breakfast: null, lunch: null, dinner: null },
-    Saturday: { breakfast: null, lunch: null, dinner: null },
-    Sunday: { breakfast: null, lunch: null, dinner: null }
-  });
-
-  const [sampleRecipes, setSampleRecipes] = useState([
-    { id: 1, name: "Kid-Friendly Chicken Tacos", time: "20 min", difficulty: "Easy", tags: ["gluten-free option", "Miles Fave"], image: "🌮", instagramUrl: "https://instagram.com/p/sample1", instagramHandle: "@familyfoodie" },
-    { id: 2, name: "Homemade Sourdough Bread", time: "4 hours", difficulty: "Medium", tags: ["fresh baked", "Dad Fave"], image: "🍞" },
-    { id: 3, name: "Veggie Hidden Mac & Cheese", time: "25 min", difficulty: "Easy", tags: ["kid-approved", "veggie-packed", "Ezra Fave"], image: "🧀", instagramUrl: "https://instagram.com/p/sample3", instagramHandle: "@kidsfoodlove" },
-    { id: 4, name: "Sheet Pan Salmon & Vegetables", time: "30 min", difficulty: "Easy", tags: ["healthy", "one-pan", "Mom Fave"], image: "🐟" }
-  ]);
-
-  const [shoppingList, setShoppingList] = useState([
-    { id: 1, item: "Chicken breast", category: "Meat", checked: false },
-    { id: 2, item: "Whole wheat tortillas", category: "Pantry", checked: true },
-    { id: 3, item: "Cheddar cheese", category: "Dairy", checked: false },
-    { id: 4, item: "Bell peppers", category: "Produce", checked: false },
-    { id: 5, item: "Sourdough starter", category: "Specialty", checked: false }
-  ]);
+  // Use database data instead of hardcoded state
+  const {
+    recipes: sampleRecipes,
+    shoppingList,
+    families,
+    mealPlans: mealPlan,
+    profile,
+    loading: dataLoading,
+    addRecipe,
+    addShoppingItem,
+    updateShoppingItem,
+    setRecipes: setSampleRecipes,
+    setShoppingList,
+    setMealPlans: setMealPlan
+  } = useUserData(user);
 
   // Check if screen is mobile/tablet
   useEffect(() => {
@@ -118,56 +114,37 @@ const MealPlanningApp = () => {
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  // Load data from localStorage on mount
+  // Authentication state management
   useEffect(() => {
-    const savedMealPlan = localStorage.getItem('honeyspoon-mealplan');
-    const savedRecipes = localStorage.getItem('honeyspoon-recipes');
-    const savedShoppingList = localStorage.getItem('honeyspoon-shopping');
-    
-    if (savedMealPlan) {
-      try {
-        setMealPlan(JSON.parse(savedMealPlan));
-      } catch (e) {
-        console.error('Error loading meal plan:', e);
-      }
-    }
-    
-    if (savedRecipes) {
-      try {
-        setSampleRecipes(JSON.parse(savedRecipes));
-      } catch (e) {
-        console.error('Error loading recipes:', e);
-      }
-    }
-    
-    if (savedShoppingList) {
-      try {
-        setShoppingList(JSON.parse(savedShoppingList));
-      } catch (e) {
-        console.error('Error loading shopping list:', e);
-      }
-    }
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Save data to localStorage whenever state changes
-  useEffect(() => {
-    localStorage.setItem('honeyspoon-mealplan', JSON.stringify(mealPlan));
-  }, [mealPlan]);
-
-  useEffect(() => {
-    localStorage.setItem('honeyspoon-recipes', JSON.stringify(sampleRecipes));
-  }, [sampleRecipes]);
-
-  useEffect(() => {
-    localStorage.setItem('honeyspoon-shopping', JSON.stringify(shoppingList));
-  }, [shoppingList]);
-
-  const familyMembers = [
-    { name: "Mom", restrictions: ["dairy-free"] },
-    { name: "Dad", restrictions: [] },
-    { name: "Ezra (5)", restrictions: ["no spicy"] },
-    { name: "Miles (8)", restrictions: ["nut allergy"] }
-  ];
+  // Get family members from database
+  const familyMembers = families.length > 0 && families[0].family_members 
+    ? families[0].family_members.map(member => ({
+        name: member.name,
+        restrictions: member.dietary_restrictions || []
+      }))
+    : [
+        { name: "Mom", restrictions: ["dairy-free"] },
+        { name: "Dad", restrictions: [] },
+        { name: "Child 1", restrictions: ["no spicy"] },
+        { name: "Child 2", restrictions: ["nut allergy"] }
+      ];
 
   const [favoriteSnacks, setFavoriteSnacks] = useState([
     { id: 1, name: "Homemade Trail Mix", emoji: "🥜", category: "Nuts & Seeds", favorite: "Ezra Fave", store: "Costco" },
@@ -363,33 +340,17 @@ const MealPlanningApp = () => {
     );
   };
 
-  const addShoppingItem = (newItem) => {
-    const newId = Math.max(...shoppingList.map(item => item.id), 0) + 1;
-    setShoppingList(prev => [...prev, {
-      id: newId,
-      item: newItem.item,
-      category: newItem.category || 'Other',
-      checked: false
-    }]);
-  };
 
   const removeShoppingItem = (itemId) => {
     setShoppingList(prev => prev.filter(item => item.id !== itemId));
   };
 
-  const addNewRecipe = (newRecipe) => {
-    const newId = Math.max(...sampleRecipes.map(recipe => recipe.id), 0) + 1;
-    const recipe = {
-      id: newId,
-      name: newRecipe.name,
-      time: newRecipe.time,
-      difficulty: newRecipe.difficulty,
-      tags: newRecipe.tags || [],
-      image: newRecipe.image || "🍽️",
-      instagramUrl: newRecipe.instagramUrl || null,
-      instagramHandle: newRecipe.instagramHandle || null
-    };
-    setSampleRecipes(prev => [...prev, recipe]);
+  const addNewRecipe = async (newRecipe) => {
+    try {
+      await addRecipe(newRecipe);
+    } catch (error) {
+      console.error('Error adding recipe:', error);
+    }
   };
 
   const addNewContent = (newContent) => {
@@ -570,6 +531,26 @@ const MealPlanningApp = () => {
     </div>
   );
 
+  // Show loading screen while checking authentication or loading data
+  if (authLoading || (user && dataLoading)) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-xl flex items-center justify-center text-4xl mb-4 bg-gradient-to-br from-yellow-100 to-orange-100 mx-auto">
+            🍯
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">HoneySpoon</h1>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show auth screen if not authenticated
+  if (!user) {
+    return <Auth />;
+  }
+
   return (
     <div className={`min-h-screen bg-gray-50 ${isMobile ? 'pb-20' : ''}`}>
       {/* Header */}
@@ -593,6 +574,15 @@ const MealPlanningApp = () => {
               >
                 <Users size={16} />
                 <span className="text-sm font-medium">{isMobile ? '4' : 'Family of 4'}</span>
+              </button>
+              <button 
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                }}
+                className="flex items-center space-x-2 px-3 py-2 rounded-lg cursor-pointer hover:opacity-80 transition-opacity text-gray-600 hover:text-gray-800"
+              >
+                <User size={16} />
+                {!isMobile && <span className="text-sm font-medium">Sign Out</span>}
               </button>
             </div>
           </div>
