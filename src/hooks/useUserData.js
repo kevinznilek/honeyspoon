@@ -7,6 +7,9 @@ import {
   updateShoppingItem,
   getFamilies,
   createFamily,
+  createFamilyMember,
+  updateFamilyMember,
+  deleteFamilyMember,
   getMealPlans,
   getProfile,
   createProfile
@@ -228,6 +231,58 @@ export const useUserData = (user) => {
     }
   };
 
+  const addFamilyMember = async (member) => {
+    try {
+      if (families.length === 0) return;
+      
+      const familyId = families[0].id;
+      const newMember = await createFamilyMember(familyId, member);
+      
+      setFamilies(prev => prev.map(family => 
+        family.id === familyId 
+          ? { ...family, family_members: [...family.family_members, newMember] }
+          : family
+      ));
+      
+      return newMember;
+    } catch (error) {
+      console.error('Error adding family member:', error);
+      throw error;
+    }
+  };
+
+  const updateFamilyMemberLocal = async (memberId, updates) => {
+    try {
+      const updatedMember = await updateFamilyMember(memberId, updates);
+      
+      setFamilies(prev => prev.map(family => ({
+        ...family,
+        family_members: family.family_members.map(member =>
+          member.id === memberId ? updatedMember : member
+        )
+      })));
+      
+      return updatedMember;
+    } catch (error) {
+      console.error('Error updating family member:', error);
+      throw error;
+    }
+  };
+
+  const removeFamilyMember = async (memberId) => {
+    try {
+      await deleteFamilyMember(memberId);
+      
+      setFamilies(prev => prev.map(family => ({
+        ...family,
+        family_members: family.family_members.filter(member => member.id !== memberId)
+      })));
+    } catch (error) {
+      console.error('Error removing family member:', error);
+      throw error;
+    }
+  };
+
   return {
     recipes,
     shoppingList,
@@ -238,6 +293,9 @@ export const useUserData = (user) => {
     addRecipe,
     addShoppingItem,
     updateShoppingItem: updateShoppingItemLocal,
+    addFamilyMember,
+    updateFamilyMember: updateFamilyMemberLocal,
+    removeFamilyMember,
     setRecipes,
     setShoppingList,
     setMealPlans

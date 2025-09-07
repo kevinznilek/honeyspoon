@@ -94,6 +94,29 @@ export const createFamilyMember = async (familyId, member) => {
   return data[0];
 };
 
+export const updateFamilyMember = async (memberId, updates) => {
+  const { data, error } = await supabase
+    .from('family_members')
+    .update({
+      name: updates.name,
+      dietary_restrictions: updates.restrictions || []
+    })
+    .eq('id', memberId)
+    .select();
+  
+  if (error) throw error;
+  return data[0];
+};
+
+export const deleteFamilyMember = async (memberId) => {
+  const { error } = await supabase
+    .from('family_members')
+    .delete()
+    .eq('id', memberId);
+  
+  if (error) throw error;
+};
+
 // Shopping List Functions
 export const getShoppingList = async (userId) => {
   const { data, error } = await supabase

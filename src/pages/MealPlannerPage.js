@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const MealPlannerPage = ({ 
   mealPlan, 
@@ -6,8 +7,28 @@ const MealPlannerPage = ({
   setSelectedDay, 
   familyMembers, 
   isMobile, 
-  setShowFamilyProfiles 
+  setShowFamilyProfiles,
+  recipes = []
 }) => {
+  const navigate = useNavigate();
+  const [showMealModal, setShowMealModal] = useState(false);
+  const [selectedMealSlot, setSelectedMealSlot] = useState(null);
+  const [dailyNotes, setDailyNotes] = useState({});
+
+  const openMealPlanner = (day, mealType) => {
+    const isSnack = mealType === 'morning-snack' || mealType === 'afternoon-snack';
+    
+    if (isSnack && mockSnacks.length === 0) {
+      navigate('/snacks');
+      return;
+    } else if (!isSnack && recipes.length === 0) {
+      navigate('/recipes');
+      return;
+    }
+    
+    setSelectedMealSlot({ day, mealType });
+    setShowMealModal(true);
+  };
   const MealCard = ({ mealType, meal }) => (
     <div className={`bg-white rounded-xl p-4 shadow-sm border border-gray-100 ${isMobile ? 'rounded-2xl p-5' : ''}`}>
       <div className="flex items-center justify-between mb-3">
@@ -45,7 +66,10 @@ const MealPlannerPage = ({
           )}
         </div>
       ) : (
-        <button className={`w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-orange-400 hover:bg-orange-50 transition-colors ${isMobile ? 'rounded-xl p-8' : ''}`}>
+        <button 
+          onClick={() => openMealPlanner(selectedDay, mealType)}
+          className={`w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-orange-400 hover:bg-orange-50 transition-colors ${isMobile ? 'rounded-xl p-8' : ''}`}
+        >
           <div className="text-gray-400 mb-2">
             <span className="text-2xl">+</span>
           </div>
@@ -54,6 +78,104 @@ const MealPlannerPage = ({
       )}
     </div>
   );
+
+  // Mock snacks data - in a real app, this would come from the database
+  const mockSnacks = [
+    { id: 's1', name: 'Mixed Nuts', emoji: '🥜', category: 'Nuts & Seeds' },
+    { id: 's2', name: 'Apple Slices', emoji: '🍎', category: 'Fresh & Natural' },
+    { id: 's3', name: 'Granola Bar', emoji: '🥨', category: 'Crunchy' },
+    { id: 's4', name: 'Yogurt', emoji: '🥩', category: 'Protein Rich' },
+    { id: 's5', name: 'Cookies', emoji: '🍪', category: 'Sweet' }
+  ];
+
+  const MealPlanningModal = () => {
+    const [selectedRecipe, setSelectedRecipe] = useState('');
+    const [selectedTime, setSelectedTime] = useState('');
+
+    if (!showMealModal || !selectedMealSlot) return null;
+
+    const isSnack = selectedMealSlot.mealType === 'morning-snack' || selectedMealSlot.mealType === 'afternoon-snack';
+    const itemsList = isSnack ? mockSnacks : recipes;
+
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      // TODO: Implement meal planning logic here
+      console.log('Planning meal:', { 
+        day: selectedMealSlot.day, 
+        mealType: selectedMealSlot.mealType, 
+        recipe: selectedRecipe, 
+        time: selectedTime 
+      });
+      setShowMealModal(false);
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className={`bg-white rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto ${isMobile ? 'p-5' : ''}`}>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-gray-900">
+              Plan {selectedMealSlot.mealType.replace('-', ' ')} for {selectedMealSlot.day}
+            </h3>
+            <button 
+              onClick={() => setShowMealModal(false)}
+              className="text-gray-400 hover:text-gray-600 text-2xl"
+            >
+              ×
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select {isSnack ? 'Snack' : 'Recipe'}
+              </label>
+              <select
+                value={selectedRecipe}
+                onChange={(e) => setSelectedRecipe(e.target.value)}
+                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent ${isMobile ? 'text-base' : ''}`}
+                required
+              >
+                <option value="">Choose a {isSnack ? 'snack' : 'recipe'}...</option>
+                {itemsList.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.emoji || item.image} {item.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
+              <input
+                type="time"
+                value={selectedTime}
+                onChange={(e) => setSelectedTime(e.target.value)}
+                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent ${isMobile ? 'text-base' : ''}`}
+                required
+              />
+            </div>
+
+            <div className="flex space-x-3 pt-4">
+              <button
+                type="button"
+                onClick={() => setShowMealModal(false)}
+                className={`flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors ${isMobile ? 'py-4' : ''}`}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className={`flex-1 px-6 py-3 text-white rounded-lg font-medium transition-colors ${isMobile ? 'py-4' : ''}`}
+                style={{backgroundColor: '#F79101'}}
+              >
+                Plan {isSnack ? 'Snack' : 'Meal'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -95,61 +217,44 @@ const MealPlannerPage = ({
         <MealCard mealType="dinner" meal={mealPlan[selectedDay].dinner} />
       </div>
 
-      {/* Family Dietary Restrictions */}
+      {/* Snacks Section */}
       <div className={`bg-white rounded-xl p-6 shadow-sm border border-gray-100 ${isMobile ? 'rounded-2xl p-5' : ''}`}>
-        <h3 className={`font-semibold text-gray-800 mb-4 ${isMobile ? 'text-lg' : ''}`}>Family Dietary Needs</h3>
-        {familyMembers.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="text-4xl mb-4">👨‍👩‍👧‍👦</div>
-            <p className="text-gray-500 mb-4">No family members added yet</p>
-            <button
-              onClick={() => setShowFamilyProfiles(true)}
-              className={`px-6 py-2 text-white rounded-lg font-medium ${isMobile ? 'px-8 py-3 rounded-xl' : ''}`}
-              style={{backgroundColor: '#F79101'}}
-            >
-              Add Family Members
-            </button>
-          </div>
-        ) : (
-          <div className={`${isMobile ? 'grid grid-cols-2 gap-3' : 'grid md:grid-cols-2 lg:grid-cols-4 gap-4'}`}>
-            {familyMembers.map((member, index) => (
-              <div key={index} className={`rounded-lg p-3 ${isMobile ? 'rounded-xl p-4' : ''}`} 
-                   style={{backgroundColor: '#FCF4E8'}}>
-                <h4 className={`font-medium ${isMobile ? 'text-base mb-2' : ''}`} 
-                    style={{color: '#B8860B'}}>{member.name}</h4>
-                {member.dietary_restrictions?.length > 0 ? (
-                  <div className={`mt-2 space-y-1 ${isMobile ? 'space-y-2' : ''}`}>
-                    {member.dietary_restrictions.map((restriction, idx) => (
-                      <span key={idx} className={`inline-block px-2 py-1 rounded text-xs ${isMobile ? 'px-3 rounded-lg font-medium' : ''}`} 
-                            style={{backgroundColor: '#FFF2C7', color: '#8B5A00'}}>
-                        {restriction}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <span className="text-sm" style={{color: '#F79101'}}>No restrictions</span>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-        
-        <div className={`flex items-center justify-between mt-6 ${isMobile ? 'flex-col space-y-3' : ''}`}>
+        <h3 className={`font-semibold text-gray-800 mb-4 ${isMobile ? 'text-lg' : ''}`}>Snacks</h3>
+        <div className={`${isMobile ? 'space-y-3' : 'grid md:grid-cols-2 gap-4'}`}>
           <button 
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${isMobile ? 'py-3 rounded-xl touch-manipulation w-full justify-center' : ''}`} 
-            style={{backgroundColor: '#868a9d', color: '#FFFFFF', ...(isMobile ? {minHeight: '44px'} : {})}}
+            onClick={() => openMealPlanner(selectedDay, 'morning-snack')}
+            className={`border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-orange-400 hover:bg-orange-50 transition-colors ${isMobile ? 'rounded-xl p-5' : ''}`}
           >
-            <span>Suggest Meals</span>
+            <div className="text-gray-400 mb-2">
+              <span className="text-lg">+</span>
+            </div>
+            <p className={`text-gray-500 font-medium ${isMobile ? 'text-sm' : 'text-xs'}`}>Morning Snack</p>
           </button>
           <button 
-            onClick={() => setShowFamilyProfiles(true)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors text-white ${isMobile ? 'py-3 rounded-xl touch-manipulation w-full' : ''}`} 
-            style={{backgroundColor: '#F79101', ...(isMobile ? {minHeight: '44px'} : {})}}
+            onClick={() => openMealPlanner(selectedDay, 'afternoon-snack')}
+            className={`border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-orange-400 hover:bg-orange-50 transition-colors ${isMobile ? 'rounded-xl p-5' : ''}`}
           >
-            <span>{isMobile ? 'Manage Family' : 'Manage'}</span>
+            <div className="text-gray-400 mb-2">
+              <span className="text-lg">+</span>
+            </div>
+            <p className={`text-gray-500 font-medium ${isMobile ? 'text-sm' : 'text-xs'}`}>Afternoon Snack</p>
           </button>
         </div>
       </div>
+
+      {/* Daily Notes */}
+      <div className={`bg-white rounded-xl p-6 shadow-sm border border-gray-100 ${isMobile ? 'rounded-2xl p-5' : ''}`}>
+        <h3 className={`font-semibold text-gray-800 mb-4 ${isMobile ? 'text-lg' : ''}`}>Notes for {selectedDay}</h3>
+        <textarea
+          value={dailyNotes[selectedDay] || ''}
+          onChange={(e) => setDailyNotes(prev => ({ ...prev, [selectedDay]: e.target.value }))}
+          placeholder="Add notes for today's meal planning, shopping reminders, or any other thoughts..."
+          className={`w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent resize-none ${isMobile ? 'p-5 rounded-xl text-base' : 'text-sm'}`}
+          rows={isMobile ? 6 : 4}
+        />
+      </div>
+
+      <MealPlanningModal />
     </div>
   );
 };

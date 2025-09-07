@@ -19,8 +19,8 @@ const Navigation = ({ user, isMobile, setShowFamilyProfiles }) => {
   const tabs = [
     { id: 'planner', label: 'Meal Planner', icon: Calendar, path: '/' },
     { id: 'recipes', label: 'Recipes', icon: ChefHat, path: '/recipes' },
-    { id: 'shopping', label: 'Shopping List', icon: ShoppingCart, path: '/shopping' },
     { id: 'snacks', label: 'Favorite Snacks', icon: Cookie, path: '/snacks' },
+    { id: 'shopping', label: 'Shopping List', icon: ShoppingCart, path: '/shopping' },
     { id: 'pantry', label: 'Smart Pantry', icon: Camera, path: '/pantry' },
     { id: 'content', label: 'Content', icon: Video, path: '/content' }
   ];
@@ -66,16 +66,22 @@ const Navigation = ({ user, isMobile, setShowFamilyProfiles }) => {
 
       {/* Mobile Bottom Navigation */}
       {isMobile && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50">
-          <div className="flex justify-around">
+        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2 z-50">
+          <div className="grid grid-cols-3 grid-rows-2 gap-1">
             {tabs.map(tab => (
-              <TabButton 
+              <Link
                 key={tab.id}
-                path={tab.path}
-                label={tab.label} 
-                icon={tab.icon} 
-                isActive={location.pathname === tab.path} 
-              />
+                to={tab.path}
+                className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors ${
+                  location.pathname === tab.path
+                    ? 'text-white'
+                    : 'text-gray-600'
+                }`}
+                style={location.pathname === tab.path ? {backgroundColor: '#F79101'} : {}}
+              >
+                <tab.icon size={20} className="mb-1" />
+                <span className="text-xs font-medium leading-tight text-center">{tab.label.split(' ')[0]}</span>
+              </Link>
             ))}
           </div>
         </nav>
@@ -102,6 +108,9 @@ const AppContent = () => {
     addRecipe,
     addShoppingItem,
     updateShoppingItem,
+    addFamilyMember,
+    updateFamilyMember,
+    removeFamilyMember,
     setRecipes,
     setShoppingList,
     setMealPlans
@@ -136,15 +145,78 @@ const AppContent = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Family profiles modal (simplified for routing)
+  // Enhanced Family profiles modal
   const FamilyProfilesModal = () => {
+    const [editingMember, setEditingMember] = useState(null);
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [memberName, setMemberName] = useState('');
+    const [dietaryRestrictions, setDietaryRestrictions] = useState('');
+
     if (!showFamilyProfiles) return null;
     
     const familyMembers = families[0]?.family_members || [];
 
+    const handleAddMember = async (e) => {
+      e.preventDefault();
+      try {
+        const restrictions = dietaryRestrictions
+          .split(',')
+          .map(r => r.trim())
+          .filter(r => r);
+        
+        await addFamilyMember({
+          name: memberName,
+          restrictions: restrictions
+        });
+        
+        setMemberName('');
+        setDietaryRestrictions('');
+        setShowAddForm(false);
+      } catch (error) {
+        console.error('Error adding family member:', error);
+      }
+    };
+
+    const handleUpdateMember = async (memberId) => {
+      try {
+        const member = familyMembers.find(m => m.id === memberId);
+        const restrictions = dietaryRestrictions
+          .split(',')
+          .map(r => r.trim())
+          .filter(r => r);
+        
+        await updateFamilyMember(memberId, {
+          name: memberName,
+          restrictions: restrictions
+        });
+        
+        setEditingMember(null);
+        setMemberName('');
+        setDietaryRestrictions('');
+      } catch (error) {
+        console.error('Error updating family member:', error);
+      }
+    };
+
+    const startEdit = (member) => {
+      setEditingMember(member.id);
+      setMemberName(member.name);
+      setDietaryRestrictions(member.dietary_restrictions?.join(', ') || '');
+    };
+
+    const handleDelete = async (memberId) => {
+      if (window.confirm('Are you sure you want to remove this family member?')) {
+        try {
+          await removeFamilyMember(memberId);
+        } catch (error) {
+          console.error('Error removing family member:', error);
+        }
+      }
+    };
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className={`bg-white rounded-2xl p-6 w-full max-w-md ${isMobile ? 'p-5' : ''}`}>
+        <div className={`bg-white rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto ${isMobile ? 'p-5' : ''}`}>
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-gray-900">Family Profiles</h3>
             <button 
@@ -155,30 +227,126 @@ const AppContent = () => {
             </button>
           </div>
           
-          <div className="space-y-3">
-            {familyMembers.length === 0 ? (
+          <div className="space-y-3 mb-6">
+            {familyMembers.map((member) => (
+              <div key={member.id} className="p-3 rounded-lg border border-gray-200">
+                {editingMember === member.id ? (
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      value={memberName}
+                      onChange={(e) => setMemberName(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+                      placeholder="Member name"
+                    />
+                    <input
+                      type="text"
+                      value={dietaryRestrictions}
+                      onChange={(e) => setDietaryRestrictions(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+                      placeholder="Dietary restrictions (comma separated)"
+                    />
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleUpdateMember(member.id)}
+                        className="flex-1 py-2 px-3 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditingMember(null)}
+                        className="flex-1 py-2 px-3 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium text-gray-900">{member.name}</h4>
+                        <p className="text-sm text-gray-500">
+                          {member.dietary_restrictions?.length > 0 
+                            ? member.dietary_restrictions.join(', ') 
+                            : 'No restrictions'
+                          }
+                        </p>
+                      </div>
+                      <div className="flex space-x-1">
+                        <button
+                          onClick={() => startEdit(member)}
+                          className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => handleDelete(member.id)}
+                          className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+            
+            {familyMembers.length === 0 && !showAddForm && (
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">👨‍👩‍👧‍👦</div>
                 <p className="text-gray-500 mb-4">No family members added yet</p>
                 <p className="text-sm text-gray-400">Add family members to track dietary restrictions and preferences</p>
               </div>
-            ) : (
-              familyMembers.map((member, index) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg border border-gray-200">
-                  <div>
-                    <h4 className="font-medium text-gray-900">{member.name}</h4>
-                    <p className="text-sm text-gray-500">
-                      {member.dietary_restrictions?.length > 0 ? member.dietary_restrictions.join(', ') : 'No restrictions'}
-                    </p>
-                  </div>
-                </div>
-              ))
             )}
           </div>
+
+          {showAddForm ? (
+            <form onSubmit={handleAddMember} className="space-y-3 mb-4 p-3 bg-gray-50 rounded-lg">
+              <input
+                type="text"
+                value={memberName}
+                onChange={(e) => setMemberName(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+                placeholder="Member name"
+                required
+              />
+              <input
+                type="text"
+                value={dietaryRestrictions}
+                onChange={(e) => setDietaryRestrictions(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+                placeholder="Dietary restrictions (comma separated)"
+              />
+              <div className="flex space-x-2">
+                <button
+                  type="submit"
+                  className="flex-1 py-2 px-4 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
+                >
+                  Add Member
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddForm(false)}
+                  className="flex-1 py-2 px-4 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className={`w-full mb-4 py-2 px-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-orange-400 hover:text-orange-600 transition-colors ${isMobile ? 'py-3 rounded-xl' : ''}`}
+            >
+              + Add Family Member
+            </button>
+          )}
           
           <button
             onClick={() => setShowFamilyProfiles(false)}
-            className={`w-full mt-6 py-3 px-4 text-white rounded-lg font-medium transition-colors ${isMobile ? 'py-4 rounded-xl' : ''}`}
+            className={`w-full py-3 px-4 text-white rounded-lg font-medium transition-colors ${isMobile ? 'py-4 rounded-xl' : ''}`}
             style={{backgroundColor: '#F79101'}}
           >
             Close
@@ -241,7 +409,7 @@ const AppContent = () => {
                 className="flex items-center space-x-2 px-3 py-2 rounded-lg cursor-pointer hover:opacity-80 transition-opacity text-gray-600 hover:text-gray-800"
               >
                 <User size={16} />
-                {!isMobile && <span className="text-sm font-medium">Sign Out</span>}
+                <span className="text-sm font-medium">Logout</span>
               </button>
             </div>
           </div>
@@ -263,6 +431,7 @@ const AppContent = () => {
                 familyMembers={familyMembers}
                 isMobile={isMobile}
                 setShowFamilyProfiles={setShowFamilyProfiles}
+                recipes={recipes}
               />
             } 
           />

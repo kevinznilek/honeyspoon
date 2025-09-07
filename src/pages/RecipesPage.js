@@ -10,6 +10,13 @@ const RecipesPage = ({
 }) => {
   const [showAddRecipe, setShowAddRecipe] = useState(false);
   const [expandedRecipe, setExpandedRecipe] = useState(null);
+  const [showMealPlanModal, setShowMealPlanModal] = useState(false);
+  const [selectedRecipeForPlan, setSelectedRecipeForPlan] = useState(null);
+
+  const openMealPlanModal = (recipe) => {
+    setSelectedRecipeForPlan(recipe);
+    setShowMealPlanModal(true);
+  };
 
   const RecipeModal = ({ recipe, onClose, onSave }) => {
     const [name, setName] = useState(recipe?.name || '');
@@ -19,6 +26,7 @@ const RecipesPage = ({
     const [tags, setTags] = useState(recipe?.tags ? recipe.tags.join(', ') : '');
     const [instagramUrl, setInstagramUrl] = useState(recipe?.instagramUrl || '');
     const [instagramHandle, setInstagramHandle] = useState(recipe?.instagramHandle || '');
+    const [instructions, setInstructions] = useState(recipe?.instructions || '');
 
     const handleSubmit = async (e) => {
       e.preventDefault();
@@ -31,7 +39,8 @@ const RecipesPage = ({
         image: image || '🍽️',
         tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
         instagramUrl: instagramUrl.trim(),
-        instagramHandle: instagramHandle.trim()
+        instagramHandle: instagramHandle.trim(),
+        instructions: instructions.trim()
       };
 
       if (recipe) {
@@ -104,14 +113,13 @@ const RecipesPage = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Emoji</label>
-              <input
-                type="text"
-                value={image}
-                onChange={(e) => setImage(e.target.value)}
-                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent ${isMobile ? 'text-base' : ''}`}
-                placeholder="🍽️"
-                maxLength={2}
+              <label className="block text-sm font-medium text-gray-700 mb-2">Instructions</label>
+              <textarea
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent resize-none ${isMobile ? 'text-base' : ''}`}
+                placeholder="Enter recipe instructions..."
+                rows={6}
               />
             </div>
 
@@ -165,6 +173,100 @@ const RecipesPage = ({
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    );
+  };
+
+  const MealPlanModal = () => {
+    const [selectedDay, setSelectedDay] = useState('Monday');
+    const [selectedMealType, setSelectedMealType] = useState('breakfast');
+
+    if (!showMealPlanModal || !selectedRecipeForPlan) return null;
+
+    const handlePlanMeal = () => {
+      // TODO: Implement meal planning logic
+      console.log('Planning meal:', {
+        recipe: selectedRecipeForPlan,
+        day: selectedDay,
+        mealType: selectedMealType
+      });
+      setShowMealPlanModal(false);
+      setSelectedRecipeForPlan(null);
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className={`bg-white rounded-2xl p-6 w-full max-w-md ${isMobile ? 'p-5' : ''}`}>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-gray-900">Plan Meal</h3>
+            <button 
+              onClick={() => setShowMealPlanModal(false)}
+              className="text-gray-400 hover:text-gray-600 text-2xl"
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="mb-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <span className="text-2xl">{selectedRecipeForPlan.image}</span>
+              <div>
+                <h4 className="font-medium text-gray-900">{selectedRecipeForPlan.name}</h4>
+                <p className="text-sm text-gray-500">{selectedRecipeForPlan.time} • {selectedRecipeForPlan.difficulty}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Day</label>
+              <select
+                value={selectedDay}
+                onChange={(e) => setSelectedDay(e.target.value)}
+                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent ${isMobile ? 'text-base' : ''}`}
+              >
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+                <option value="Saturday">Saturday</option>
+                <option value="Sunday">Sunday</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Meal</label>
+              <select
+                value={selectedMealType}
+                onChange={(e) => setSelectedMealType(e.target.value)}
+                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent ${isMobile ? 'text-base' : ''}`}
+              >
+                <option value="breakfast">Breakfast</option>
+                <option value="lunch">Lunch</option>
+                <option value="dinner">Dinner</option>
+                <option value="morning-snack">Morning Snack</option>
+                <option value="afternoon-snack">Afternoon Snack</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex space-x-3 pt-6">
+            <button
+              onClick={() => setShowMealPlanModal(false)}
+              className={`flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors ${isMobile ? 'py-4' : ''}`}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handlePlanMeal}
+              className={`flex-1 px-6 py-3 text-white rounded-lg font-medium transition-colors ${isMobile ? 'py-4' : ''}`}
+              style={{backgroundColor: '#F79101'}}
+            >
+              Add to Meal Plan
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -280,10 +382,11 @@ const RecipesPage = ({
                     Edit
                   </button>
                   <button 
+                    onClick={() => openMealPlanModal(recipe)}
                     className={`flex-1 px-3 py-2 text-white rounded-lg text-sm font-medium transition-colors ${isMobile ? 'py-3 rounded-xl' : ''}`}
                     style={{backgroundColor: '#F79101'}}
                   >
-                    Cook
+                    Plan
                   </button>
                 </div>
               </div>
@@ -344,13 +447,14 @@ const RecipesPage = ({
                     className={`flex-1 px-3 py-2 text-white rounded-lg text-sm font-medium transition-colors ${isMobile ? 'py-3 rounded-xl' : ''}`}
                     style={{backgroundColor: '#868a9d'}}
                   >
-                    Save
+                    Import
                   </button>
                   <button 
+                    onClick={() => openMealPlanModal(recipe)}
                     className={`flex-1 px-3 py-2 text-white rounded-lg text-sm font-medium transition-colors ${isMobile ? 'py-3 rounded-xl' : ''}`}
                     style={{backgroundColor: '#F79101'}}
                   >
-                    Cook
+                    Plan
                   </button>
                 </div>
               </div>
@@ -366,6 +470,8 @@ const RecipesPage = ({
           onSave={() => {}}
         />
       )}
+
+      <MealPlanModal />
     </div>
   );
 };

@@ -1,342 +1,292 @@
 import React, { useState } from 'react';
 
 const PantryPage = ({ user, isMobile }) => {
-  const [pantryItems, setPantryItems] = useState([]);
-  const [showAddItem, setShowAddItem] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
+  const [pantryImage, setPantryImage] = useState(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [detectedIngredients, setDetectedIngredients] = useState([]);
+  const [suggestedRecipes, setSuggestedRecipes] = useState([]);
+  const [scanResults, setScanResults] = useState(null);
 
-  const categories = [
-    { name: 'Produce', emoji: '🥬', color: '#10B981' },
-    { name: 'Meat & Seafood', emoji: '🥩', color: '#EF4444' },
-    { name: 'Dairy', emoji: '🧀', color: '#3B82F6' },
-    { name: 'Pantry', emoji: '🥫', color: '#F59E0B' },
-    { name: 'Frozen', emoji: '❄️', color: '#6366F1' },
-    { name: 'Beverages', emoji: '🥤', color: '#8B5CF6' },
-    { name: 'Condiments', emoji: '🧂', color: '#EC4899' },
-    { name: 'Other', emoji: '📦', color: '#6B7280' }
+  // Mock detected ingredients for demo purposes
+  const mockIngredients = [
+    'Tomatoes', 'Onions', 'Garlic', 'Olive Oil', 'Pasta', 'Cheese', 'Basil', 
+    'Chicken Breast', 'Bell Peppers', 'Rice', 'Black Beans', 'Lime', 'Avocado'
   ];
 
-  const locations = ['Pantry Shelf 1', 'Pantry Shelf 2', 'Fridge Door', 'Fridge Main', 'Fridge Crisper', 'Freezer', 'Countertop', 'Other'];
+  // Mock recipe suggestions based on detected ingredients
+  const mockRecipes = [
+    {
+      id: 1,
+      name: 'Pasta Primavera',
+      image: '🍝',
+      ingredients: ['Pasta', 'Tomatoes', 'Bell Peppers', 'Garlic', 'Olive Oil'],
+      time: '25 min',
+      difficulty: 'Easy'
+    },
+    {
+      id: 2,
+      name: 'Chicken Stir Fry',
+      image: '🍗',
+      ingredients: ['Chicken Breast', 'Bell Peppers', 'Onions', 'Garlic', 'Rice'],
+      time: '20 min',
+      difficulty: 'Medium'
+    },
+    {
+      id: 3,
+      name: 'Black Bean Bowl',
+      image: '🥣',
+      ingredients: ['Black Beans', 'Rice', 'Avocado', 'Lime', 'Tomatoes'],
+      time: '15 min',
+      difficulty: 'Easy'
+    }
+  ];
 
-  const AddItemModal = ({ item, onClose }) => {
-    const [name, setName] = useState(item?.name || '');
-    const [category, setCategory] = useState(item?.category || 'Other');
-    const [quantity, setQuantity] = useState(item?.quantity || '');
-    const [emoji, setEmoji] = useState(item?.emoji || '📦');
-    const [expiry, setExpiry] = useState(item?.expiry || '');
-    const [location, setLocation] = useState(item?.location || 'Pantry Shelf 1');
-
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      if (!name.trim()) return;
-
-      const itemData = {
-        id: item?.id || Date.now(),
-        name: name.trim(),
-        category,
-        quantity,
-        emoji: emoji || '📦',
-        expiry,
-        location
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPantryImage(e.target.result);
       };
-
-      if (item) {
-        setPantryItems(prev => prev.map(i => i.id === item.id ? itemData : i));
-      } else {
-        setPantryItems(prev => [...prev, itemData]);
-      }
-      
-      onClose();
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className={`bg-white rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto ${isMobile ? 'p-5' : ''}`}>
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-gray-900">
-              {item ? 'Edit Item' : 'Add Pantry Item'}
-            </h3>
-            <button 
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-2xl"
-            >
-              ×
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Item Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent ${isMobile ? 'text-base' : ''}`}
-                placeholder="Enter item name"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent ${isMobile ? 'text-base' : ''}`}
-                >
-                  {categories.map(cat => (
-                    <option key={cat.name} value={cat.name}>{cat.emoji} {cat.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
-                <input
-                  type="text"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent ${isMobile ? 'text-base' : ''}`}
-                  placeholder="1 jar, 2 lbs, etc."
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-              <select
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent ${isMobile ? 'text-base' : ''}`}
-              >
-                {locations.map(loc => (
-                  <option key={loc} value={loc}>{loc}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Expiry Date (Optional)</label>
-              <input
-                type="date"
-                value={expiry}
-                onChange={(e) => setExpiry(e.target.value)}
-                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent ${isMobile ? 'text-base' : ''}`}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Emoji</label>
-              <input
-                type="text"
-                value={emoji}
-                onChange={(e) => setEmoji(e.target.value)}
-                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent ${isMobile ? 'text-base' : ''}`}
-                placeholder="📦"
-                maxLength={2}
-              />
-            </div>
-
-            <div className="flex space-x-3 pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className={`flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors ${isMobile ? 'py-4' : ''}`}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className={`flex-1 px-6 py-3 text-white rounded-lg font-medium transition-colors ${isMobile ? 'py-4' : ''}`}
-                style={{backgroundColor: '#F79101'}}
-              >
-                {item ? 'Update' : 'Add Item'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
+      reader.readAsDataURL(file);
+    }
   };
 
-  const groupedItems = categories.map(category => ({
-    ...category,
-    items: pantryItems.filter(item => item.category === category.name)
-  })).filter(category => category.items.length > 0);
-
-  const expiringItems = pantryItems.filter(item => {
-    if (!item.expiry) return false;
-    const expiryDate = new Date(item.expiry);
-    const today = new Date();
-    const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
-    return daysUntilExpiry <= 7 && daysUntilExpiry >= 0;
-  });
-
-  const getExpiryStatus = (expiryDate) => {
-    if (!expiryDate) return null;
-    const expiry = new Date(expiryDate);
-    const today = new Date();
-    const daysUntilExpiry = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+  const handleScanPantry = async () => {
+    if (!pantryImage) return;
     
-    if (daysUntilExpiry < 0) return { text: 'Expired', color: '#EF4444' };
-    if (daysUntilExpiry <= 3) return { text: `${daysUntilExpiry} days`, color: '#F59E0B' };
-    if (daysUntilExpiry <= 7) return { text: `${daysUntilExpiry} days`, color: '#10B981' };
-    return null;
+    setIsScanning(true);
+    
+    // Simulate AI scanning process
+    setTimeout(() => {
+      const randomIngredients = mockIngredients
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 6 + Math.floor(Math.random() * 4));
+      
+      setDetectedIngredients(randomIngredients);
+      setSuggestedRecipes(mockRecipes);
+      setScanResults({
+        ingredientsFound: randomIngredients.length,
+        recipesAvailable: mockRecipes.length,
+        confidence: 85 + Math.floor(Math.random() * 15)
+      });
+      setIsScanning(false);
+    }, 3000);
+  };
+
+  const clearScan = () => {
+    setPantryImage(null);
+    setDetectedIngredients([]);
+    setSuggestedRecipes([]);
+    setScanResults(null);
+    setIsScanning(false);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className={`font-bold text-gray-900 ${isMobile ? 'text-2xl' : 'text-2xl'}`}>
-          Pantry Tracker
-        </h2>
-        <button
-          onClick={() => setShowAddItem(true)}
-          className={`px-4 py-2 text-white rounded-lg font-medium flex items-center space-x-2 transition-colors ${isMobile ? 'px-6 py-3 rounded-xl' : ''}`}
-          style={{backgroundColor: '#F79101'}}
-        >
-          <span className="text-lg">+</span>
-          <span>{isMobile ? 'Add' : 'Add Item'}</span>
-        </button>
+        <div>
+          <h2 className={`font-bold text-gray-900 ${isMobile ? 'text-2xl' : 'text-2xl'}`}>
+            Smart Pantry
+          </h2>
+          <p className={`text-gray-600 mt-1 ${isMobile ? 'text-base' : 'text-sm'}`}>
+            Scan your pantry to discover recipes you can make
+          </p>
+        </div>
+        {scanResults && (
+          <button
+            onClick={clearScan}
+            className={`px-4 py-2 text-gray-600 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors ${isMobile ? 'px-6 py-3 rounded-xl' : ''}`}
+          >
+            New Scan
+          </button>
+        )}
       </div>
 
-      {/* Expiring Soon Section */}
-      {expiringItems.length > 0 && (
-        <div className={`bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-6 border border-orange-200 ${isMobile ? 'rounded-2xl p-5' : ''}`}>
+      {/* Camera/Upload Section */}
+      {!pantryImage && (
+        <div className={`bg-white rounded-xl p-8 shadow-sm border border-gray-100 text-center ${isMobile ? 'rounded-2xl p-10' : ''}`}>
+          <div className="text-6xl mb-4">📷</div>
+          <h3 className={`text-xl font-semibold text-gray-900 mb-2 ${isMobile ? 'text-2xl' : ''}`}>
+            Scan Your Pantry
+          </h3>
+          <p className={`text-gray-600 mb-6 ${isMobile ? 'text-base' : 'text-sm'}`}>
+            Take a photo of your pantry, fridge, or ingredients and we'll suggest recipes you can make
+          </p>
+          
+          <label className={`inline-flex items-center px-6 py-3 text-white rounded-lg font-medium cursor-pointer transition-colors ${isMobile ? 'px-8 py-4 rounded-xl' : ''}`}
+                 style={{backgroundColor: '#F79101'}}>
+            <span className="mr-2">📸</span>
+            <span>Take Photo</span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+              capture="environment"
+            />
+          </label>
+          
+          <div className={`mt-4 ${isMobile ? 'mt-6' : ''}`}>
+            <p className={`text-gray-500 ${isMobile ? 'text-base' : 'text-sm'}`}>or</p>
+            <label className={`mt-2 inline-flex items-center px-4 py-2 text-gray-700 border border-gray-300 rounded-lg font-medium cursor-pointer hover:bg-gray-50 transition-colors ${isMobile ? 'px-6 py-3 rounded-xl mt-4' : ''}`}>
+              <span className="mr-2">📁</span>
+              <span>Upload Image</span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </label>
+          </div>
+        </div>
+      )}
+
+      {/* Image Preview & Scan */}
+      {pantryImage && !scanResults && (
+        <div className={`bg-white rounded-xl p-6 shadow-sm border border-gray-100 ${isMobile ? 'rounded-2xl p-5' : ''}`}>
+          <div className="text-center">
+            <img 
+              src={pantryImage} 
+              alt="Pantry" 
+              className="max-w-full h-64 object-cover rounded-lg mx-auto mb-4"
+            />
+            
+            {!isScanning ? (
+              <button
+                onClick={handleScanPantry}
+                className={`px-6 py-3 text-white rounded-lg font-medium transition-colors ${isMobile ? 'px-8 py-4 rounded-xl' : ''}`}
+                style={{backgroundColor: '#F79101'}}
+              >
+                <span className="mr-2">🔍</span>
+                Scan Ingredients
+              </button>
+            ) : (
+              <div className="text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mb-4"></div>
+                <p className={`text-gray-600 ${isMobile ? 'text-base' : 'text-sm'}`}>
+                  Analyzing your pantry with AI...
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Scan Results */}
+      {scanResults && (
+        <div className={`bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 border border-green-200 ${isMobile ? 'rounded-2xl p-5' : ''}`}>
           <div className="flex items-center space-x-2 mb-4">
-            <span className="text-xl">⚠️</span>
-            <h3 className={`font-semibold text-gray-800 ${isMobile ? 'text-lg' : ''}`}>
-              Expiring Soon ({expiringItems.length} items)
+            <span className="text-2xl">✨</span>
+            <h3 className={`font-semibold text-gray-800 ${isMobile ? 'text-xl' : 'text-lg'}`}>
+              Scan Complete!
             </h3>
           </div>
-          <div className={`${isMobile ? 'space-y-2' : 'grid grid-cols-2 gap-3'}`}>
-            {expiringItems.map(item => {
-              const status = getExpiryStatus(item.expiry);
-              return (
-                <div key={item.id} className={`bg-white rounded-lg p-3 border border-orange-200 ${isMobile ? 'rounded-xl p-4' : ''}`}>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-lg">{item.emoji}</span>
-                    <div className="flex-1">
-                      <p className={`font-medium text-gray-900 ${isMobile ? 'text-base' : 'text-sm'}`}>{item.name}</p>
-                      <p className={`text-xs ${isMobile ? 'text-sm' : ''}`} style={{color: status.color}}>
-                        {status.text}
-                      </p>
+          
+          <div className={`${isMobile ? 'grid grid-cols-1 gap-4' : 'grid grid-cols-3 gap-6'} mb-6`}>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">{scanResults.ingredientsFound}</div>
+              <div className={`text-sm text-gray-600 ${isMobile ? 'text-xs' : ''}`}>Ingredients Found</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">{scanResults.recipesAvailable}</div>
+              <div className={`text-sm text-gray-600 ${isMobile ? 'text-xs' : ''}`}>Recipes Available</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600">{scanResults.confidence}%</div>
+              <div className={`text-sm text-gray-600 ${isMobile ? 'text-xs' : ''}`}>Confidence</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detected Ingredients */}
+      {detectedIngredients.length > 0 && (
+        <div className={`bg-white rounded-xl p-6 shadow-sm border border-gray-100 ${isMobile ? 'rounded-2xl p-5' : ''}`}>
+          <h3 className={`font-semibold text-gray-800 mb-4 ${isMobile ? 'text-lg' : ''}`}>
+            🥕 Detected Ingredients
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {detectedIngredients.map((ingredient, index) => (
+              <span 
+                key={index}
+                className={`px-3 py-1 rounded-full text-sm font-medium ${isMobile ? 'px-4 py-2' : ''}`}
+                style={{backgroundColor: '#FFF2C7', color: '#8B5A00'}}
+              >
+                {ingredient}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recipe Suggestions */}
+      {suggestedRecipes.length > 0 && (
+        <div className={`bg-white rounded-xl p-6 shadow-sm border border-gray-100 ${isMobile ? 'rounded-2xl p-5' : ''}`}>
+          <h3 className={`font-semibold text-gray-800 mb-4 ${isMobile ? 'text-lg' : ''}`}>
+            👨‍🍳 Recipes You Can Make
+          </h3>
+          <div className={`${isMobile ? 'space-y-4' : 'grid md:grid-cols-2 lg:grid-cols-3 gap-4'}`}>
+            {suggestedRecipes.map((recipe) => (
+              <div key={recipe.id} 
+                   className={`border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer ${isMobile ? 'rounded-xl' : ''}`}>
+                <div className="flex items-center space-x-3 mb-3">
+                  <span className="text-2xl">{recipe.image}</span>
+                  <div className="flex-1">
+                    <h4 className={`font-medium text-gray-900 ${isMobile ? 'text-base' : 'text-sm'}`}>{recipe.name}</h4>
+                    <div className={`flex items-center space-x-3 mt-1 text-xs text-gray-500 ${isMobile ? 'text-sm space-x-4' : ''}`}>
+                      <span>⏱️ {recipe.time}</span>
+                      <span>📊 {recipe.difficulty}</span>
                     </div>
                   </div>
                 </div>
-              );
-            })}
+                
+                <div className="mb-3">
+                  <p className={`text-xs text-gray-600 font-medium mb-2 ${isMobile ? 'text-sm' : ''}`}>Uses your ingredients:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {recipe.ingredients.slice(0, 3).map((ingredient, index) => (
+                      <span 
+                        key={index}
+                        className={`px-2 py-1 rounded-full text-xs ${isMobile ? 'px-3 font-medium' : ''}`}
+                        style={{backgroundColor: '#E8F5E8', color: '#166534'}}
+                      >
+                        {ingredient}
+                      </span>
+                    ))}
+                    {recipe.ingredients.length > 3 && (
+                      <span className={`px-2 py-1 rounded-full text-xs text-gray-500 ${isMobile ? 'px-3' : ''}`}>
+                        +{recipe.ingredients.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <button 
+                  className={`w-full px-4 py-2 text-white rounded-lg text-sm font-medium transition-colors ${isMobile ? 'py-3 rounded-xl' : ''}`}
+                  style={{backgroundColor: '#F79101'}}
+                >
+                  View Recipe
+                </button>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {pantryItems.length === 0 ? (
-        <div className={`bg-white rounded-xl p-8 shadow-sm border border-gray-100 text-center ${isMobile ? 'rounded-2xl p-10' : ''}`}>
-          <div className="text-4xl mb-4">🏠</div>
-          <p className="text-gray-500 mb-4">Your pantry is empty</p>
-          <button
-            onClick={() => setShowAddItem(true)}
-            className={`px-6 py-2 text-white rounded-lg font-medium ${isMobile ? 'px-8 py-3 rounded-xl' : ''}`}
-            style={{backgroundColor: '#F79101'}}
-          >
-            Add First Item
-          </button>
+      {/* Getting Started Tips */}
+      {!pantryImage && (
+        <div className={`bg-blue-50 rounded-xl p-6 border border-blue-200 ${isMobile ? 'rounded-2xl p-5' : ''}`}>
+          <h3 className={`font-semibold text-blue-900 mb-4 ${isMobile ? 'text-lg' : ''}`}>
+            💡 Tips for Better Results
+          </h3>
+          <ul className={`space-y-2 text-blue-800 ${isMobile ? 'text-base space-y-3' : 'text-sm'}`}>
+            <li>• Take a clear, well-lit photo of your pantry shelves or fridge</li>
+            <li>• Make sure ingredient labels are visible</li>
+            <li>• Include spices, condiments, and fresh produce</li>
+            <li>• Try different angles for better ingredient detection</li>
+          </ul>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {groupedItems.map(category => (
-            <div key={category.name} 
-                 className={`bg-white rounded-xl p-6 shadow-sm border border-gray-100 ${isMobile ? 'rounded-2xl p-5' : ''}`}>
-              <div className="flex items-center space-x-3 mb-4">
-                <span className="text-xl">{category.emoji}</span>
-                <h3 className={`font-semibold text-gray-800 ${isMobile ? 'text-lg' : ''}`}>
-                  {category.name}
-                </h3>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${isMobile ? 'px-3' : ''}`}
-                      style={{backgroundColor: '#FCF4E8', color: '#B8860B'}}>
-                  {category.items.length}
-                </span>
-              </div>
-
-              <div className={`${isMobile ? 'space-y-3' : 'grid grid-cols-2 lg:grid-cols-3 gap-4'}`}>
-                {category.items.map(item => {
-                  const status = getExpiryStatus(item.expiry);
-                  return (
-                    <div key={item.id} 
-                         className={`border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow ${isMobile ? 'rounded-xl' : ''}`}>
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center space-x-3">
-                          <span className="text-2xl">{item.emoji}</span>
-                          <div>
-                            <h4 className={`font-medium text-gray-900 ${isMobile ? 'text-base' : 'text-sm'}`}>{item.name}</h4>
-                            <div className={`mt-1 space-y-1 ${isMobile ? 'space-y-1' : ''}`}>
-                              {item.quantity && (
-                                <p className={`text-xs text-gray-500 ${isMobile ? 'text-sm' : ''}`}>
-                                  📦 {item.quantity}
-                                </p>
-                              )}
-                              <p className={`text-xs text-gray-500 ${isMobile ? 'text-sm' : ''}`}>
-                                📍 {item.location}
-                              </p>
-                              {status && (
-                                <p className={`text-xs font-medium ${isMobile ? 'text-sm' : ''}`} 
-                                   style={{color: status.color}}>
-                                  ⏰ {status.text}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => setEditingItem(item)}
-                          className={`text-gray-400 hover:text-gray-600 p-1 ${isMobile ? 'p-2' : ''}`}
-                        >
-                          <span className={`${isMobile ? 'text-lg' : ''}`}>✏️</span>
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Statistics */}
-      <div className={`bg-white rounded-xl p-6 shadow-sm border border-gray-100 ${isMobile ? 'rounded-2xl p-5' : ''}`}>
-        <h3 className={`font-semibold text-gray-800 mb-4 ${isMobile ? 'text-lg' : ''}`}>Pantry Stats</h3>
-        <div className={`${isMobile ? 'grid grid-cols-2 gap-4' : 'grid grid-cols-4 gap-6'}`}>
-          <div className="text-center">
-            <div className="text-2xl font-bold" style={{color: '#F79101'}}>{pantryItems.length}</div>
-            <div className={`text-sm text-gray-600 ${isMobile ? 'text-xs' : ''}`}>Total Items</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold" style={{color: '#10B981'}}>{groupedItems.length}</div>
-            <div className={`text-sm text-gray-600 ${isMobile ? 'text-xs' : ''}`}>Categories</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold" style={{color: '#F59E0B'}}>{expiringItems.length}</div>
-            <div className={`text-sm text-gray-600 ${isMobile ? 'text-xs' : ''}`}>Expiring Soon</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold" style={{color: '#EF4444'}}>
-              {pantryItems.filter(item => getExpiryStatus(item.expiry)?.color === '#EF4444').length}
-            </div>
-            <div className={`text-sm text-gray-600 ${isMobile ? 'text-xs' : ''}`}>Expired</div>
-          </div>
-        </div>
-      </div>
-
-      {(showAddItem || editingItem) && (
-        <AddItemModal
-          item={editingItem}
-          onClose={() => {
-            setShowAddItem(false);
-            setEditingItem(null);
-          }}
-        />
       )}
     </div>
   );

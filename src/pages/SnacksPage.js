@@ -5,12 +5,23 @@ const SnacksPage = ({ user, isMobile }) => {
   const [favoriteSnacks, setFavoriteSnacks] = useState([]);
   const [showSnackCreator, setShowSnackCreator] = useState(false);
 
+  const categoryEmojis = {
+    'Nuts & Seeds': '🥜',
+    'Fresh & Natural': '🍎',
+    'Homemade': '🏠',
+    'Protein Rich': '🥩',
+    'Crunchy': '🥨',
+    'Frozen Treats': '🍦',
+    'Sweet': '🍬',
+    'Other': '🍪'
+  };
+
   const addNewSnack = (newSnack) => {
     const newId = Math.max(...favoriteSnacks.map(snack => snack.id), 0) + 1;
     const snack = {
       id: newId,
       name: newSnack.name,
-      emoji: newSnack.emoji || '🍽️',
+      emoji: categoryEmojis[newSnack.category] || '🍪',
       category: newSnack.category,
       favorite: newSnack.favorite || null,
       store: newSnack.store
@@ -26,7 +37,6 @@ const SnacksPage = ({ user, isMobile }) => {
       const formData = new FormData(e.target);
       const newSnack = {
         name: formData.get('name'),
-        emoji: formData.get('emoji'),
         category: formData.get('category'),
         favorite: formData.get('favorite') === 'none' ? null : formData.get('favorite'),
         store: formData.get('store')
@@ -57,17 +67,6 @@ const SnacksPage = ({ user, isMobile }) => {
                 className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-transparent"
                 placeholder="Enter snack name"
                 required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Emoji</label>
-              <input
-                type="text"
-                name="emoji"
-                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-transparent"
-                placeholder="🍪"
-                maxLength={2}
               />
             </div>
 
