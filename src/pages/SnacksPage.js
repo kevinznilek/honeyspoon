@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Heart } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Heart, X } from 'lucide-react';
+import Quagga from 'quagga';
 
 const SnacksPage = ({ user, isMobile }) => {
   const [favoriteSnacks, setFavoriteSnacks] = useState([]);
@@ -32,34 +33,136 @@ const SnacksPage = ({ user, isMobile }) => {
   const SnackCreatorModal = () => {
     const [isScanning, setIsScanning] = useState(false);
     const [scannedProduct, setScannedProduct] = useState(null);
+    const [showScanner, setShowScanner] = useState(false);
+    const scannerRef = useRef(null);
+    const [scanError, setScanError] = useState(null);
     
     if (!showSnackCreator) return null;
 
-    const handleBarcodeCapture = async (event) => {
-      const file = event.target.files[0];
-      if (file) {
+    const startBarcodeScanning = () => {
+      setShowScanner(true);
+      setIsScanning(true);
+      setScanError(null);
+      
+      setTimeout(() => {
+        if (scannerRef.current) {
+          Quagga.init({
+            inputStream: {
+              name: "Live",
+              type: "LiveStream",
+              target: scannerRef.current,
+              constraints: {
+                width: 300,
+                height: 200,
+                facingMode: "environment"
+              }
+            },
+            decoder: {
+              readers: [
+                "code_128_reader",
+                "ean_reader",
+                "ean_8_reader",
+                "code_39_reader",
+                "code_39_vin_reader",
+                "codabar_reader",
+                "upc_reader",
+                "upc_e_reader"
+              ]
+            },
+            locate: true
+          }, (err) => {
+            if (err) {
+              console.error('QuaggaJS initialization failed:', err);
+              setScanError('Camera access failed. Please allow camera permissions.');
+              setIsScanning(false);
+              return;
+            }
+            Quagga.start();
+          });
+
+          Quagga.onDetected(async (result) => {
+            const barcode = result.codeResult.code;
+            console.log('Barcode detected:', barcode);
+            
+            // Stop scanning
+            Quagga.stop();
+            setShowScanner(false);
+            
+            // Fetch product data
+            await fetchProductData(barcode);
+          });
+        }
+      }, 100);
+    };
+
+    const fetchProductData = async (barcode) => {
+      try {
         setIsScanning(true);
         
-        // Simulate barcode scanning API call
-        setTimeout(() => {
-          // Mock product data - in real app, this would come from a barcode API
-          const mockProduct = {
-            name: 'Granola Bar',
-            category: 'Crunchy',
-            brand: 'Nature Valley'
+        // Try OpenFoodFacts API first
+        const response = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
+        const data = await response.json();
+        
+        if (data.status === 1 && data.product) {
+          const product = data.product;
+          const productData = {
+            name: product.product_name || product.product_name_en || 'Unknown Product',
+            brand: product.brands || 'Unknown Brand',
+            category: categorizeProduct(product.categories_tags || []),
+            barcode: barcode
           };
-          setScannedProduct(mockProduct);
-          setIsScanning(false);
+          
+          setScannedProduct(productData);
           
           // Auto-fill form fields
-          const form = event.target.closest('form');
+          const form = document.querySelector('form[data-snack-form]');
           if (form) {
-            form.name.value = mockProduct.name;
-            form.category.value = mockProduct.category;
+            const nameInput = form.querySelector('input[name="name"]');
+            const categorySelect = form.querySelector('select[name="category"]');
+            
+            if (nameInput) nameInput.value = productData.name;
+            if (categorySelect && productData.category) categorySelect.value = productData.category;
           }
-        }, 2000);
+        } else {
+          setScanError('Product not found in database. Please enter manually.');
+        }
+      } catch (error) {
+        console.error('Error fetching product data:', error);
+        setScanError('Failed to fetch product data. Please try again.');
+      } finally {
+        setIsScanning(false);
       }
     };
+
+    const categorizeProduct = (categoryTags) => {
+      const categories = categoryTags.join(' ').toLowerCase();
+      
+      if (categories.includes('nuts') || categories.includes('seeds')) return 'Nuts & Seeds';
+      if (categories.includes('fresh') || categories.includes('fruit') || categories.includes('vegetable')) return 'Fresh & Natural';
+      if (categories.includes('protein') || categories.includes('meat') || categories.includes('yogurt')) return 'Protein Rich';
+      if (categories.includes('chips') || categories.includes('crackers') || categories.includes('crunchy')) return 'Crunchy';
+      if (categories.includes('ice') || categories.includes('frozen')) return 'Frozen Treats';
+      if (categories.includes('sweet') || categories.includes('candy') || categories.includes('chocolate') || categories.includes('cookies')) return 'Sweet';
+      
+      return 'Other';
+    };
+
+    const stopScanning = () => {
+      if (Quagga) {
+        Quagga.stop();
+      }
+      setShowScanner(false);
+      setIsScanning(false);
+      setScanError(null);
+    };
+
+    useEffect(() => {
+      return () => {
+        if (Quagga) {
+          Quagga.stop();
+        }
+      };
+    }, []);
 
     const handleSubmit = (e) => {
       e.preventDefault();
@@ -74,6 +177,9 @@ const SnacksPage = ({ user, isMobile }) => {
       setShowSnackCreator(false);
       setScannedProduct(null);
       setIsScanning(false);
+      setShowScanner(false);
+      setScanError(null);
+      if (Quagga) Quagga.stop();
     };
 
     return (
@@ -86,6 +192,9 @@ const SnacksPage = ({ user, isMobile }) => {
                 setShowSnackCreator(false);
                 setScannedProduct(null);
                 setIsScanning(false);
+                setShowScanner(false);
+                setScanError(null);
+                if (Quagga) Quagga.stop();
               }}
               className="text-gray-400 hover:text-gray-600 text-2xl"
             >
@@ -93,47 +202,79 @@ const SnacksPage = ({ user, isMobile }) => {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" data-snack-form>
             {/* Barcode Scanner Section */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Quick Add with Barcode</label>
-              <label className={`flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
-                scannedProduct 
-                  ? 'border-green-400 bg-green-50' 
-                  : isScanning 
-                    ? 'border-orange-400 bg-orange-50'
-                    : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
-              }`}>
-                <div className="flex flex-col items-center justify-center py-2">
-                  {isScanning ? (
-                    <>
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500 mb-2"></div>
-                      <p className="text-sm text-orange-600 font-medium">Scanning barcode...</p>
-                    </>
-                  ) : scannedProduct ? (
-                    <>
-                      <div className="text-xl mb-1">✅</div>
-                      <p className="text-sm text-green-600 font-medium">{scannedProduct.name}</p>
-                      <p className="text-xs text-gray-500">{scannedProduct.brand}</p>
-                    </>
-                  ) : (
-                    <>
-                      <div className="text-xl mb-1">📱</div>
-                      <p className="text-sm text-gray-500">
-                        <span className="font-semibold">Scan Barcode</span>
-                      </p>
-                      <p className="text-xs text-gray-400">Camera will auto-detect barcode</p>
-                    </>
-                  )}
+              
+              {!showScanner ? (
+                <button
+                  type="button"
+                  onClick={startBarcodeScanning}
+                  className={`flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
+                    scannedProduct 
+                      ? 'border-green-400 bg-green-50' 
+                      : scanError
+                        ? 'border-red-400 bg-red-50'
+                        : isScanning 
+                          ? 'border-orange-400 bg-orange-50'
+                          : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                  }`}
+                >
+                  <div className="flex flex-col items-center justify-center py-2">
+                    {isScanning ? (
+                      <>
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500 mb-2"></div>
+                        <p className="text-sm text-orange-600 font-medium">Loading product data...</p>
+                      </>
+                    ) : scannedProduct ? (
+                      <>
+                        <div className="text-xl mb-1">✅</div>
+                        <p className="text-sm text-green-600 font-medium">{scannedProduct.name}</p>
+                        <p className="text-xs text-gray-500">{scannedProduct.brand}</p>
+                      </>
+                    ) : scanError ? (
+                      <>
+                        <div className="text-xl mb-1">❌</div>
+                        <p className="text-sm text-red-600 font-medium">Scan Failed</p>
+                        <p className="text-xs text-gray-500">Tap to try again</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-xl mb-1">📱</div>
+                        <p className="text-sm text-gray-500">
+                          <span className="font-semibold">Scan Barcode</span>
+                        </p>
+                        <p className="text-xs text-gray-400">Live camera scanner</p>
+                      </>
+                    )}
+                  </div>
+                </button>
+              ) : (
+                <div className="relative">
+                  <div className="bg-black rounded-xl overflow-hidden">
+                    <div ref={scannerRef} className="w-full h-64"></div>
+                    <div className="absolute inset-0 border-2 border-orange-400 rounded-xl"></div>
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                      <div className="w-48 h-32 border-2 border-orange-400 bg-transparent"></div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={stopScanning}
+                    className="absolute top-2 right-2 bg-gray-800 bg-opacity-75 text-white p-2 rounded-full"
+                  >
+                    <X size={16} />
+                  </button>
+                  <p className="text-center text-sm text-gray-600 mt-2">
+                    Position barcode within the frame
+                  </p>
                 </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handleBarcodeCapture}
-                  className="hidden"
-                />
-              </label>
+              )}
+              
+              {scanError && (
+                <p className="text-sm text-red-600 mt-2">{scanError}</p>
+              )}
             </div>
 
             <div className="text-center text-sm text-gray-500">or add manually</div>
@@ -207,6 +348,9 @@ const SnacksPage = ({ user, isMobile }) => {
                   setShowSnackCreator(false);
                   setScannedProduct(null);
                   setIsScanning(false);
+                  setShowScanner(false);
+                  setScanError(null);
+                  if (Quagga) Quagga.stop();
                 }}
                 className="flex-1 py-3 px-4 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
               >
