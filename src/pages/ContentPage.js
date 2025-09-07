@@ -39,7 +39,14 @@ const ContentPage = ({ user, isMobile }) => {
   };
 
   const ContentCreatorModal = () => {
+    const [selectedVideoFile, setSelectedVideoFile] = useState(null);
+    
     if (!showContentCreator) return null;
+
+    const handleVideoFileChange = (e) => {
+      const file = e.target.files[0];
+      setSelectedVideoFile(file);
+    };
 
     const handleSubmit = (e) => {
       e.preventDefault();
@@ -55,12 +62,20 @@ const ContentPage = ({ user, isMobile }) => {
           excerpt: formData.get('excerpt'),
           readTime: formData.get('readTime')
         } : {
-          duration: formData.get('duration')
+          duration: formData.get('duration'),
+          videoFile: formData.get('videoFile') // Store video file reference
         })
       };
       
       addNewContent(newContent);
       setShowContentCreator(false);
+      setSelectedVideoFile(null); // Reset video file selection
+    };
+
+    // Reset video file when modal closes
+    const handleModalClose = () => {
+      setShowContentCreator(false);
+      setSelectedVideoFile(null);
     };
 
     return (
@@ -69,7 +84,7 @@ const ContentPage = ({ user, isMobile }) => {
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-gray-900">Create Content</h3>
             <button 
-              onClick={() => setShowContentCreator(false)}
+              onClick={handleModalClose}
               className="text-gray-400 hover:text-gray-600 text-2xl"
             >
               ×
@@ -136,15 +151,53 @@ const ContentPage = ({ user, isMobile }) => {
                 </div>
               </>
             ) : (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Duration</label>
-                <input
-                  type="text"
-                  name="duration"
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-transparent"
-                  placeholder="e.g., 10:30"
-                />
-              </div>
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Upload Video *</label>
+                  <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
+                    selectedVideoFile 
+                      ? 'border-orange-400 bg-orange-50' 
+                      : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                  }`}>
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <div className="text-2xl mb-2">🎥</div>
+                      {selectedVideoFile ? (
+                        <>
+                          <p className="mb-2 text-sm text-orange-600 font-semibold">{selectedVideoFile.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {(selectedVideoFile.size / (1024 * 1024)).toFixed(1)} MB
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="mb-2 text-sm text-gray-500">
+                            <span className="font-semibold">Click to upload video</span>
+                          </p>
+                          <p className="text-xs text-gray-500">MP4, MOV, AVI (MAX. 100MB)</p>
+                        </>
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      name="videoFile"
+                      accept="video/*"
+                      className="hidden"
+                      capture="environment"
+                      onChange={handleVideoFileChange}
+                      required
+                    />
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Duration</label>
+                  <input
+                    type="text"
+                    name="duration"
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+                    placeholder="e.g., 10:30"
+                  />
+                </div>
+              </>
             )}
 
             <div>
@@ -160,7 +213,7 @@ const ContentPage = ({ user, isMobile }) => {
             <div className="flex space-x-3 mt-6">
               <button
                 type="button"
-                onClick={() => setShowContentCreator(false)}
+                onClick={handleModalClose}
                 className="flex-1 py-3 px-4 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
               >
                 Cancel
