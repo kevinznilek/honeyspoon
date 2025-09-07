@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
-import { Calendar, ShoppingCart, Camera, Video, Cookie, Users, User } from 'lucide-react';
+import { Calendar, ShoppingCart, Camera, Video, Cookie, Users, User, ChefHat } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import Auth from './components/Auth';
 import { useUserData } from './hooks/useUserData';
@@ -9,18 +9,20 @@ import { useUserData } from './hooks/useUserData';
 import MealPlannerPage from './pages/MealPlannerPage';
 import RecipesPage from './pages/RecipesPage';
 import ShoppingPage from './pages/ShoppingPage';
+import SnacksPage from './pages/SnacksPage';
 import PantryPage from './pages/PantryPage';
-import CommunityPage from './pages/CommunityPage';
+import ContentPage from './pages/ContentPage';
 
 const Navigation = ({ user, isMobile, setShowFamilyProfiles }) => {
   const location = useLocation();
   
   const tabs = [
     { id: 'planner', label: 'Meal Planner', icon: Calendar, path: '/' },
-    { id: 'recipes', label: 'Recipes', icon: Cookie, path: '/recipes' },
+    { id: 'recipes', label: 'Recipes', icon: ChefHat, path: '/recipes' },
     { id: 'shopping', label: 'Shopping List', icon: ShoppingCart, path: '/shopping' },
+    { id: 'snacks', label: 'Favorite Snacks', icon: Cookie, path: '/snacks' },
     { id: 'pantry', label: 'Smart Pantry', icon: Camera, path: '/pantry' },
-    { id: 'community', label: 'Community', icon: Video, path: '/community' }
+    { id: 'content', label: 'Content', icon: Video, path: '/content' }
   ];
 
   const TabButton = ({ path, label, icon: Icon, isActive }) => (
@@ -291,6 +293,15 @@ const AppContent = () => {
             } 
           />
           <Route 
+            path="/snacks" 
+            element={
+              <SnacksPage 
+                user={user}
+                isMobile={isMobile}
+              />
+            } 
+          />
+          <Route 
             path="/pantry" 
             element={
               <PantryPage 
@@ -300,9 +311,9 @@ const AppContent = () => {
             } 
           />
           <Route 
-            path="/community" 
+            path="/content" 
             element={
-              <CommunityPage 
+              <ContentPage 
                 user={user}
                 isMobile={isMobile}
               />
