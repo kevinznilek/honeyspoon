@@ -36,6 +36,14 @@ const SnacksPage = ({ user, isMobile }) => {
     const [showScanner, setShowScanner] = useState(false);
     const scannerRef = useRef(null);
     const [scanError, setScanError] = useState(null);
+
+    useEffect(() => {
+      return () => {
+        if (Quagga) {
+          Quagga.stop();
+        }
+      };
+    }, []);
     
     if (!showSnackCreator) return null;
 
@@ -155,14 +163,6 @@ const SnacksPage = ({ user, isMobile }) => {
       setIsScanning(false);
       setScanError(null);
     };
-
-    useEffect(() => {
-      return () => {
-        if (Quagga) {
-          Quagga.stop();
-        }
-      };
-    }, []);
 
     const handleSubmit = (e) => {
       e.preventDefault();
