@@ -39,13 +39,15 @@ const SnacksPage = ({ user, isMobile }) => {
 
     useEffect(() => {
       return () => {
-        if (Quagga) {
-          Quagga.stop();
+        try {
+          if (Quagga && typeof Quagga.stop === 'function') {
+            Quagga.stop();
+          }
+        } catch (error) {
+          console.error('Error stopping Quagga:', error);
         }
       };
     }, []);
-    
-    if (!showSnackCreator) return null;
 
     const startBarcodeScanning = () => {
       setShowScanner(true);
@@ -53,8 +55,9 @@ const SnacksPage = ({ user, isMobile }) => {
       setScanError(null);
       
       setTimeout(() => {
-        if (scannerRef.current) {
-          Quagga.init({
+        if (scannerRef.current && Quagga && typeof Quagga.init === 'function') {
+          try {
+            Quagga.init({
             inputStream: {
               name: "Live",
               type: "LiveStream",
@@ -79,16 +82,16 @@ const SnacksPage = ({ user, isMobile }) => {
             },
             locate: true
           }, (err) => {
-            if (err) {
-              console.error('QuaggaJS initialization failed:', err);
-              setScanError('Camera access failed. Please allow camera permissions.');
-              setIsScanning(false);
-              return;
-            }
-            Quagga.start();
-          });
+              if (err) {
+                console.error('QuaggaJS initialization failed:', err);
+                setScanError('Camera access failed. Please allow camera permissions.');
+                setIsScanning(false);
+                return;
+              }
+              Quagga.start();
+            });
 
-          Quagga.onDetected(async (result) => {
+            Quagga.onDetected(async (result) => {
             const barcode = result.codeResult.code;
             console.log('Barcode detected:', barcode);
             
@@ -99,6 +102,14 @@ const SnacksPage = ({ user, isMobile }) => {
             // Fetch product data
             await fetchProductData(barcode);
           });
+          } catch (error) {
+            console.error('Error initializing Quagga:', error);
+            setScanError('Barcode scanner initialization failed.');
+            setIsScanning(false);
+          }
+        } else {
+          setScanError('Barcode scanner not available.');
+          setIsScanning(false);
         }
       }, 100);
     };
@@ -156,8 +167,12 @@ const SnacksPage = ({ user, isMobile }) => {
     };
 
     const stopScanning = () => {
-      if (Quagga) {
-        Quagga.stop();
+      try {
+        if (Quagga && typeof Quagga.stop === 'function') {
+          Quagga.stop();
+        }
+      } catch (error) {
+        console.error('Error stopping Quagga:', error);
       }
       setShowScanner(false);
       setIsScanning(false);
@@ -179,8 +194,16 @@ const SnacksPage = ({ user, isMobile }) => {
       setIsScanning(false);
       setShowScanner(false);
       setScanError(null);
-      if (Quagga) Quagga.stop();
+      try {
+        if (Quagga && typeof Quagga.stop === 'function') {
+          Quagga.stop();
+        }
+      } catch (error) {
+        console.error('Error stopping Quagga:', error);
+      }
     };
+
+    if (!showSnackCreator) return null;
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -194,7 +217,13 @@ const SnacksPage = ({ user, isMobile }) => {
                 setIsScanning(false);
                 setShowScanner(false);
                 setScanError(null);
-                if (Quagga) Quagga.stop();
+                try {
+        if (Quagga && typeof Quagga.stop === 'function') {
+          Quagga.stop();
+        }
+      } catch (error) {
+        console.error('Error stopping Quagga:', error);
+      }
               }}
               className="text-gray-400 hover:text-gray-600 text-2xl"
             >
@@ -350,7 +379,13 @@ const SnacksPage = ({ user, isMobile }) => {
                   setIsScanning(false);
                   setShowScanner(false);
                   setScanError(null);
-                  if (Quagga) Quagga.stop();
+                  try {
+        if (Quagga && typeof Quagga.stop === 'function') {
+          Quagga.stop();
+        }
+      } catch (error) {
+        console.error('Error stopping Quagga:', error);
+      }
                 }}
                 className="flex-1 py-3 px-4 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
               >
